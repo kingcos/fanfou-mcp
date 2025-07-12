@@ -218,3 +218,25 @@ class FanFou:
 
         response, content = client.request(url, method='POST')
         return json.loads(content) 
+
+    def manage_friendship(self, user_id: str, action: str) -> Dict[str, Any]:
+        """
+        管理用户关注状态
+        
+        user_id 为目标用户 ID
+        action 为操作类型：'create' 表示关注，'destroy' 表示取消关注
+        """
+        print(f'------ manage_friendship ({action}) ------')
+        
+        if action not in ['create', 'destroy']:
+            raise ValueError("action 参数必须是 'create' 或 'destroy'")
+        
+        url = f"http://api.fanfou.com/friendships/{action}.json"
+        params = {'id': user_id}
+
+        consumer = oauth2.Consumer(self.api_key, self.api_secret)
+        token = oauth2.Token(self.token, self.token_secret)
+        client = oauth2.Client(consumer, token)
+
+        response, content = client.request(url, method='POST', body=urllib.parse.urlencode(params))
+        return json.loads(content) 

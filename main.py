@@ -444,6 +444,93 @@ def manage_favorite(status_id: str, action: str) -> Dict[str, Any]:
     except Exception as e:
         return {"error": str(e)}
 
+@mcp.tool()
+def manage_friendship(user_id: str, action: str) -> Dict[str, Any]:
+    """
+    管理用户关注状态
+    
+    调用饭否 API 的 /friendships/create.json 或 /friendships/destroy.json 接口
+    来关注或取消关注指定用户。
+    
+    注意：在执行关注操作前，会先调用 get_user_info 查询目标用户信息，
+    如果目标用户账号受保护（protected），关注操作将变为申请关注，
+    需要对方确认后才能生效。
+    
+    Args:
+        user_id: 目标用户的 ID
+        action: 操作类型，"create" 表示关注，"destroy" 表示取消关注
+        
+    Returns:
+        操作结果字典，包含：
+        - 是否关注: 操作后的关注状态
+        - 操作结果: 操作是否成功的描述信息
+        - 操作类型: 执行的具体操作（关注/取消关注）
+        - 用户信息: 目标用户的基本信息
+        - 特殊情况: 如果是受保护账号的关注申请，会包含相关提示
+    """
+    try:
+        if action not in ['create', 'destroy']:
+            return {"error": "action 参数必须是 'create' 或 'destroy'"}
+        
+        client = get_fanfou_client()
+        
+        # 先获取目标用户信息
+        try:
+            user_info = client.get_user_info(user_id)
+            target_username = user_info.get("name", "")
+            is_protected = user_info.get("protected", False)
+        except Exception as e:
+            return {"error": f"无法获取用户信息: {str(e)}"}
+        
+        # 执行关注/取消关注操作
+        raw_data = client.manage_friendship(user_id, action)
+        
+        # 检查是否有错误消息（特殊情况：受保护账号的关注申请）
+        if "error" in raw_data:
+            return {
+                "操作类型": "关注申请" if action == "create" else "取消关注",
+                "操作结果": raw_data["error"],
+                "用户信息": {
+                    "用户名": target_username,
+                    "用户 ID": user_id,
+                    "是否受保护": is_protected
+                },
+                "特殊情况": "该用户账号受保护，已发送关注申请，请等待对方确认"
+            }
+        
+        # 解析正常的操作结果
+        following = raw_data.get("following", False)
+        
+        if action == "create":
+            if is_protected:
+                success_msg = f"已向 {target_username} 发出关注请求，请等待确认"
+                operation = "关注申请"
+            else:
+                success_msg = "关注成功" if following else "关注失败"
+                operation = "关注"
+        else:  # destroy
+            success_msg = "取消关注成功" if not following else "取消关注失败"
+            operation = "取消关注"
+        
+        result = {
+            "是否关注": following,
+            "操作结果": success_msg,
+            "操作类型": operation,
+            "用户信息": {
+                "用户名": target_username,
+                "用户 ID": user_id,
+                "是否受保护": is_protected
+            }
+        }
+        
+        # 如果是受保护账号的关注申请，添加特殊情况说明
+        if action == "create" and is_protected:
+            result["特殊情况"] = "该用户账号受保护，关注操作已转为申请关注"
+        
+        return result
+    except Exception as e:
+        return {"error": str(e)}
+
 if __name__ == "__main__":
     # 启动服务器
     mcp.run()
