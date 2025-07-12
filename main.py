@@ -124,17 +124,17 @@ def generate_oauth_token() -> Dict[str, str]:
         return {"error": str(e)}
 
 @mcp.tool()
-def get_user_timeline(user_id: str = '', max_id: str = '', count: int = 10) -> List[Dict[str, Any]]:
+def get_user_timeline(user_id: str = '', max_id: str = '', count: int = 5) -> List[Dict[str, Any]]:
     """
-    获取用户时间线
+    根据用户 ID 获取某个用户发表内容的时间线
     
     调用饭否 API 的 /statuses/user_timeline.json 接口获取指定用户的时间线。
     如果 user_id 为空，则获取当前登录用户的时间线。
     
     Args:
         user_id: 用户 ID，如果为空则获取当前用户时间线
-        max_id: 最大饭否 ID，用于分页获取更早的内容
-        count: 获取数量，默认 10 条，最大 60 条
+        max_id: 返回列表中内容最新 ID，用于分页获取更早的内容
+        count: 获取数量，默认 5 条
         
     Returns:
         用户时间线列表，每个元素包含：
@@ -171,16 +171,18 @@ def get_user_timeline(user_id: str = '', max_id: str = '', count: int = 10) -> L
         return [{"error": str(e)}]
 
 @mcp.tool()
-def get_home_timeline(count: int = 20, max_id: str = '') -> List[Dict[str, Any]]:
+def get_home_timeline(count: int = 5, max_id: str = '') -> List[Dict[str, Any]]:
     """
-    获取首页时间线
+    获取当前用户首页关注用户及自己的饭否时间线
     
     调用饭否 API 的 /statuses/home_timeline.json 接口获取当前用户的首页时间线，
     包含用户关注的所有人的最新消息。
+
+    注：通常用户询问「我的饭否」时，指的是该时间线，除非用户明确指出「某个用户的饭否」。
     
     Args:
-        count: 获取数量，默认 20 条，最大 60 条
-        max_id: 最大饭否 ID，用于分页获取更早的内容
+        count: 获取数量，默认 5 条
+        max_id: 返回列表中内容最新 ID，用于分页获取更早的内容
         
     Returns:
         首页时间线列表，每个元素包含：
@@ -194,6 +196,52 @@ def get_home_timeline(count: int = 20, max_id: str = '') -> List[Dict[str, Any]]
     try:
         client = get_fanfou_client()
         raw_data = client.get_home_timeline(count, max_id)
+        
+        # 过滤返回数据，只保留关键信息
+        filtered_data = []
+        for item in raw_data:
+            filtered_item = {
+                "饭否内容": item.get("text", ""),
+                "饭否 ID": item.get("id", ""),
+                "发布时间": item.get("created_at", ""),
+                "发布者": item.get("user", {}).get("screen_name", ""),
+                "发布者 ID": item.get("user", {}).get("id", "")
+            }
+            
+            # 如果有图片，添加 imageurl
+            if "photo" in item and item["photo"]:
+                filtered_item["图片链接"] = item["photo"].get("largeurl", "")
+            
+            filtered_data.append(filtered_item)
+        
+        return filtered_data
+    except Exception as e:
+        return [{"error": str(e)}]
+
+@mcp.tool()
+def get_public_timeline(count: int = 5, max_id: str = '') -> List[Dict[str, Any]]:
+    """
+    获取公开时间线
+    
+    调用饭否 API 的 /statuses/public_timeline.json 接口获取饭否全站最新的公开消息，
+    这些是所有用户可见的公开饭否内容。
+    
+    Args:
+        count: 获取数量，默认 5 条
+        max_id: 返回列表中内容最新 ID，用于分页获取更早的内容
+        
+    Returns:
+        公开时间线列表，每个元素包含：
+        - 饭否内容: 消息文本内容（HTML 格式）
+        - 饭否 ID: 消息的唯一标识符
+        - 发布时间: 消息发布时间
+        - 发布者: 发布者的显示名称
+        - 发布者 ID: 发布者的用户 ID
+        - 图片链接: 如果包含图片，则提供图片链接
+    """
+    try:
+        client = get_fanfou_client()
+        raw_data = client.get_public_timeline(count, max_id)
         
         # 过滤返回数据，只保留关键信息
         filtered_data = []
