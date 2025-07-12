@@ -7,6 +7,8 @@
 """
 
 import os
+import base64
+import requests
 from typing import Optional, List, Dict, Any
 from fastmcp import FastMCP
 from fanfou_client import FanFou
@@ -16,6 +18,54 @@ mcp = FastMCP("饭否 MCP 服务器", instructions="饭否是一款基于 Web �
 
 # 全局 FanFou 实例
 _fanfou_client: Optional[FanFou] = None
+
+def image_url_to_base64(large_url: str, normal_url: str = "") -> Optional[str]:
+    """
+    将图片URL转换为base64编码
+    
+    如果大图(largeurl)超过300KB，则使用普通图片(imageurl)进行转换
+    
+    Args:
+        large_url: 大图的URL地址
+        normal_url: 普通图片的URL地址，如果大图过大则使用此URL
+        
+    Returns:
+        base64编码的图片数据（data URL格式），如果失败则返回None
+    """
+    try:
+        # 首先尝试获取大图的大小
+        head_response = requests.head(large_url, timeout=10)
+        head_response.raise_for_status()
+        
+        # 获取内容长度
+        content_length = head_response.headers.get('content-length')
+        if content_length:
+            file_size = int(content_length)
+            # 如果大图超过300KB且有普通图片URL，则使用普通图片
+            if file_size > 300 * 1024 and normal_url:
+                print(f"大图尺寸 {file_size} 字节超过300KB，使用普通图片")
+                image_url = normal_url
+            else:
+                image_url = large_url
+        else:
+            # 如果无法获取大小信息，默认使用大图
+            image_url = large_url
+        
+        # 下载图片
+        response = requests.get(image_url, timeout=10)
+        response.raise_for_status()
+        
+        # 获取图片内容类型
+        content_type = response.headers.get('content-type', 'image/jpeg')
+        
+        # 转换为base64
+        image_base64 = base64.b64encode(response.content).decode('utf-8')
+        
+        # 返回data URL格式
+        return f"data:{content_type};base64,{image_base64}"
+    except Exception as e:
+        print(f"转换图片为base64失败: {e}")
+        return None
 
 def get_fanfou_client() -> FanFou:
     """
@@ -373,7 +423,8 @@ def get_status_info(status_id: str) -> Dict[str, Any]:
         - 是否是自己: 是否是当前用户发布的消息
         - 发布位置: 消息发布的地理位置
         - 回复信息: 如果是回复消息，包含被回复的状态 ID、用户 ID 和用户名
-        - 图片链接: 如果包含图片，则提供图片链接
+        - 图片base64: 如果包含图片，则提供图片的 base64 编码（data URL 格式）
+        - 图片链接: 如果包含图片，则提供原始图片链接作为备用
     """
     try:
         client = get_fanfou_client()
@@ -401,11 +452,21 @@ def get_status_info(status_id: str) -> Dict[str, Any]:
         else:
             status_info["回复信息"] = None
         
-        # 处理图片链接
+        # 处理图片链接和base64转换
         if "photo" in raw_data and raw_data["photo"]:
-            status_info["图片链接"] = raw_data["photo"].get("largeurl", "")
+            large_url = raw_data["photo"].get("largeurl", "")
+            normal_url = raw_data["photo"].get("imageurl", "")
+            status_info["图片链接"] = large_url
+            
+            # 将图片转换为base64，如果大图超过300KB则使用普通图片
+            if large_url:
+                image_base64 = image_url_to_base64(large_url, normal_url)
+                status_info["图片base64"] = image_base64
+            else:
+                status_info["图片base64"] = None
         else:
             status_info["图片链接"] = None
+            status_info["图片base64"] = None
         
         return status_info
     except Exception as e:
