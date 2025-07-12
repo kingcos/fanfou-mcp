@@ -124,17 +124,20 @@ def generate_oauth_token() -> Dict[str, str]:
         return {"error": str(e)}
 
 @mcp.tool()
-def get_user_timeline(user_id: str = '', max_id: str = '', count: int = 5) -> List[Dict[str, Any]]:
+def get_user_timeline(user_id: str = '', max_id: str = '', count: int = 5, q: str = '') -> List[Dict[str, Any]]:
     """
     根据用户 ID 获取某个用户发表内容的时间线
     
     调用饭否 API 的 /statuses/user_timeline.json 接口获取指定用户的时间线。
     如果 user_id 为空，则获取当前登录用户的时间线。
     
+    当提供搜索关键词时，会调用 /search/user_timeline.json 接口进行搜索。
+    
     Args:
         user_id: 用户 ID，如果为空则获取当前用户时间线
         max_id: 返回列表中内容最新 ID，用于分页获取更早的内容
         count: 获取数量，默认 5 条
+        q: 搜索关键词，如果为空则获取普通用户时间线；如果不为空则搜索该用户包含该关键词的消息
         
     Returns:
         用户时间线列表，每个元素包含：
@@ -147,7 +150,7 @@ def get_user_timeline(user_id: str = '', max_id: str = '', count: int = 5) -> Li
     """
     try:
         client = get_fanfou_client()
-        raw_data = client.request_user_timeline(user_id, max_id, count)
+        raw_data = client.request_user_timeline(user_id, max_id, count, q)
         
         # 过滤返回数据，只保留关键信息
         filtered_data = []
@@ -219,16 +222,19 @@ def get_home_timeline(count: int = 5, max_id: str = '') -> List[Dict[str, Any]]:
         return [{"error": str(e)}]
 
 @mcp.tool()
-def get_public_timeline(count: int = 5, max_id: str = '') -> List[Dict[str, Any]]:
+def get_public_timeline(count: int = 5, max_id: str = '', q: str = '') -> List[Dict[str, Any]]:
     """
     获取公开时间线
     
     调用饭否 API 的 /statuses/public_timeline.json 接口获取饭否全站最新的公开消息，
     这些是所有用户可见的公开饭否内容。
     
+    当提供搜索关键词时，会调用 /search/public_timeline.json 接口进行搜索。
+    
     Args:
         count: 获取数量，默认 5 条
         max_id: 返回列表中内容最新 ID，用于分页获取更早的内容
+        q: 搜索关键词，如果为空则获取普通公开时间线；如果不为空则搜索包含该关键词的公开消息
         
     Returns:
         公开时间线列表，每个元素包含：
@@ -241,7 +247,7 @@ def get_public_timeline(count: int = 5, max_id: str = '') -> List[Dict[str, Any]
     """
     try:
         client = get_fanfou_client()
-        raw_data = client.get_public_timeline(count, max_id)
+        raw_data = client.get_public_timeline(count, max_id, q)
         
         # 过滤返回数据，只保留关键信息
         filtered_data = []

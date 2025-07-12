@@ -81,21 +81,30 @@ class FanFou:
         result = json.loads(content)
         return result['id']
 
-    def request_user_timeline(self, user_id: str = '', max_id: str = '', count: int = 5) -> List[Dict[str, Any]]:
+    def request_user_timeline(self, user_id: str = '', max_id: str = '', count: int = 5, q: str = '') -> List[Dict[str, Any]]:
         """
         根据用户 ID 获取某个用户发表内容的时间线
         
         user_id 为用户 ID，如果为空，则获取当前用户时间线
         max_id 为返回列表中内容最新 ID，如果为空，则获取最新时间线
         count 为获取数量，默认 5 条
+        q 为搜索关键词，如果为空，则获取普通用户时间线；如果不为空，则搜索该用户包含该关键词的消息
         """
         print('------ request_user_timeline ------')
         if user_id == '':
             user_id = self.user_id
 
-        url = f"http://api.fanfou.com/statuses/user_timeline.json?id={user_id}&count={count}&format=html"
-        if len(max_id):
-            url = f"http://api.fanfou.com/statuses/user_timeline.json?max_id={max_id}&id={user_id}&count={count}&format=html"
+        # 根据是否有搜索关键词选择不同的API接口
+        if q:
+            # 使用搜索接口
+            url = f"http://api.fanfou.com/search/user_timeline.json?id={user_id}&count={count}&format=html&q={urllib.parse.quote(q)}"
+            if max_id:
+                url += f"&max_id={max_id}"
+        else:
+            # 使用普通用户时间线接口
+            url = f"http://api.fanfou.com/statuses/user_timeline.json?id={user_id}&count={count}&format=html"
+            if max_id:
+                url = f"http://api.fanfou.com/statuses/user_timeline.json?max_id={max_id}&id={user_id}&count={count}&format=html"
 
         consumer = oauth2.Consumer(self.api_key, self.api_secret)
         token = oauth2.Token(self.token, self.token_secret)
@@ -123,17 +132,27 @@ class FanFou:
         response, content = client.request(url)
         return json.loads(content)
 
-    def get_public_timeline(self, count: int = 5, max_id: str = '') -> List[Dict[str, Any]]:
+    def get_public_timeline(self, count: int = 5, max_id: str = '', q: str = '') -> List[Dict[str, Any]]:
         """
         获取公开时间线，获取饭否全站最新的公开消息
         
         max_id 为返回列表中内容最新 ID，如果为空，则获取最新时间线
         count 为获取数量，默认 5 条
+        q 为搜索关键词，如果为空，则获取普通公开时间线；如果不为空，则搜索包含该关键词的公开消息
         """
         print('------ get_public_timeline ------')
-        url = f"http://api.fanfou.com/statuses/public_timeline.json?count={count}&format=html"
-        if max_id:
-            url += f"&max_id={max_id}"
+        
+        # 根据是否有搜索关键词选择不同的API接口
+        if q:
+            # 使用搜索接口
+            url = f"http://api.fanfou.com/search/public_timeline.json?count={count}&format=html&mode=lite&q={urllib.parse.quote(q)}"
+            if max_id:
+                url += f"&max_id={max_id}"
+        else:
+            # 使用普通公开时间线接口
+            url = f"http://api.fanfou.com/statuses/public_timeline.json?count={count}&format=html"
+            if max_id:
+                url += f"&max_id={max_id}"
 
         consumer = oauth2.Consumer(self.api_key, self.api_secret)
         token = oauth2.Token(self.token, self.token_secret)
