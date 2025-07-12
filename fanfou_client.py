@@ -159,4 +159,24 @@ class FanFou:
         client = oauth2.Client(consumer, token)
 
         response, content = client.request(url)
+        return json.loads(content)
+
+    def get_user_info(self, user_id: str = '') -> Dict[str, Any]:
+        """
+        获取用户信息
+        
+        user_id 为用户 ID，如果为空，则获取当前用户信息
+        """
+        print('------ get_user_info ------')
+        
+        if user_id == '':
+            user_id = self.user_id
+        
+        url = f"http://api.fanfou.com/users/show.json?id={user_id}"
+
+        consumer = oauth2.Consumer(self.api_key, self.api_secret)
+        token = oauth2.Token(self.token, self.token_secret)
+        client = oauth2.Client(consumer, token)
+
+        response, content = client.request(url)
         return json.loads(content) 

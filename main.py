@@ -142,7 +142,7 @@ def get_user_timeline(user_id: str = '', max_id: str = '', count: int = 5, q: st
     Returns:
         用户时间线列表，每个元素包含：
         - 饭否内容: 消息文本内容（HTML 格式）
-        - 饭否 ID: 消息的唯一标识符
+        - 发布 ID: 消息的唯一标识符
         - 发布时间: 消息发布时间
         - 发布者: 发布者的显示名称
         - 发布者 ID: 发布者的用户 ID
@@ -157,9 +157,9 @@ def get_user_timeline(user_id: str = '', max_id: str = '', count: int = 5, q: st
         for item in raw_data:
             filtered_item = {
                 "饭否内容": item.get("text", ""),
-                "饭否 ID": item.get("id", ""),
+                "发布 ID": item.get("id", ""),
                 "发布时间": item.get("created_at", ""),
-                "发布者": item.get("user", {}).get("screen_name", ""),
+                "发布者": item.get("user", {}).get("name", ""),
                 "发布者 ID": item.get("user", {}).get("id", "")
             }
             
@@ -190,7 +190,7 @@ def get_home_timeline(count: int = 5, max_id: str = '') -> List[Dict[str, Any]]:
     Returns:
         首页时间线列表，每个元素包含：
         - 饭否内容: 消息文本内容（HTML 格式）
-        - 饭否 ID: 消息的唯一标识符
+        - 发布 ID: 消息的唯一标识符
         - 发布时间: 消息发布时间
         - 发布者: 发布者的显示名称
         - 发布者 ID: 发布者的用户 ID
@@ -205,9 +205,9 @@ def get_home_timeline(count: int = 5, max_id: str = '') -> List[Dict[str, Any]]:
         for item in raw_data:
             filtered_item = {
                 "饭否内容": item.get("text", ""),
-                "饭否 ID": item.get("id", ""),
+                "发布 ID": item.get("id", ""),
                 "发布时间": item.get("created_at", ""),
-                "发布者": item.get("user", {}).get("screen_name", ""),
+                "发布者": item.get("user", {}).get("name", ""),
                 "发布者 ID": item.get("user", {}).get("id", "")
             }
             
@@ -239,7 +239,7 @@ def get_public_timeline(count: int = 5, max_id: str = '', q: str = '') -> List[D
     Returns:
         公开时间线列表，每个元素包含：
         - 饭否内容: 消息文本内容（HTML 格式）
-        - 饭否 ID: 消息的唯一标识符
+        - 发布 ID: 消息的唯一标识符
         - 发布时间: 消息发布时间
         - 发布者: 发布者的显示名称
         - 发布者 ID: 发布者的用户 ID
@@ -254,9 +254,9 @@ def get_public_timeline(count: int = 5, max_id: str = '', q: str = '') -> List[D
         for item in raw_data:
             filtered_item = {
                 "饭否内容": item.get("text", ""),
-                "饭否 ID": item.get("id", ""),
+                "发布 ID": item.get("id", ""),
                 "发布时间": item.get("created_at", ""),
-                "发布者": item.get("user", {}).get("screen_name", ""),
+                "发布者": item.get("user", {}).get("name", ""),
                 "发布者 ID": item.get("user", {}).get("id", "")
             }
             
@@ -269,6 +269,76 @@ def get_public_timeline(count: int = 5, max_id: str = '', q: str = '') -> List[D
         return filtered_data
     except Exception as e:
         return [{"error": str(e)}]
+
+@mcp.tool()
+def get_user_info(user_id: str = '') -> Dict[str, Any]:
+    """
+    获取用户信息
+    
+    调用饭否 API 的 /users/show.json 接口获取指定用户的详细信息。
+    如果 user_id 为空，则获取当前登录用户的信息。
+    
+    Args:
+        user_id: 用户 ID，如果为空则获取当前用户信息
+        
+    Returns:
+        用户信息字典，包含：
+        - 用户 ID: 用户的唯一标识符
+        - 用户名: 用户名
+        - 位置: 用户所在位置
+        - 性别: 用户性别
+        - 生日: 用户生日
+        - 描述: 用户个人描述
+        - 头像: 用户头像链接
+        - 链接: 用户个人网站链接
+        - 是否加锁: 账号是否受保护
+        - 粉丝数: 被关注数量
+        - 朋友数: 互相关注数量
+        - 收藏数: 收藏的消息数量
+        - 发布数: 发布的消息数量
+        - 照片数: 发布的照片数量
+        - 是否关注: 当前用户是否关注该用户
+        - 注册时间: 账号注册时间
+        - 最新状态: 用户最新发布的消息信息
+    """
+    try:
+        client = get_fanfou_client()
+        raw_data = client.get_user_info(user_id)
+        
+        # 解析并格式化用户信息
+        user_info = {
+            "用户 ID": raw_data.get("id", ""),
+            "用户名": raw_data.get("name", ""),
+            "位置": raw_data.get("location", ""),
+            "性别": raw_data.get("gender", ""),
+            "生日": raw_data.get("birthday", ""),
+            "描述": raw_data.get("description", ""),
+            "头像": raw_data.get("profile_image_url_large", ""),
+            "链接": raw_data.get("url", ""),
+            "是否加锁": raw_data.get("protected", False),
+            "粉丝数": raw_data.get("followers_count", 0),
+            "朋友数": raw_data.get("friends_count", 0),
+            "收藏数": raw_data.get("favourites_count", 0),
+            "发布数": raw_data.get("statuses_count", 0),
+            "照片数": raw_data.get("photo_count", 0),
+            "是否关注": raw_data.get("following", False),
+            "注册时间": raw_data.get("created_at", "")
+        }
+        
+        # 解析最新状态信息
+        if "status" in raw_data and raw_data["status"]:
+            status = raw_data["status"]
+            user_info["最新状态"] = {
+                "发布时间": status.get("created_at", ""),
+                "发布 ID": status.get("id", ""),
+                "发布内容": status.get("text", "")
+            }
+        else:
+            user_info["最新状态"] = None
+        
+        return user_info
+    except Exception as e:
+        return {"error": str(e)}
 
 if __name__ == "__main__":
     # 启动服务器
