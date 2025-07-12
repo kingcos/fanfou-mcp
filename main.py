@@ -144,7 +144,7 @@ def get_user_timeline(user_id: str = '', max_id: str = '', count: int = 5, q: st
         - 饭否内容: 消息文本内容（HTML 格式）
         - 发布 ID: 消息的唯一标识符
         - 发布时间: 消息发布时间
-        - 发布者: 发布者的显示名称
+        - 发布者: 发布者的用户名
         - 发布者 ID: 发布者的用户 ID
         - 图片链接: 如果包含图片，则提供图片链接
     """
@@ -192,7 +192,7 @@ def get_home_timeline(count: int = 5, max_id: str = '') -> List[Dict[str, Any]]:
         - 饭否内容: 消息文本内容（HTML 格式）
         - 发布 ID: 消息的唯一标识符
         - 发布时间: 消息发布时间
-        - 发布者: 发布者的显示名称
+        - 发布者: 发布者的用户名
         - 发布者 ID: 发布者的用户 ID
         - 图片链接: 如果包含图片，则提供图片链接
     """
@@ -241,7 +241,7 @@ def get_public_timeline(count: int = 5, max_id: str = '', q: str = '') -> List[D
         - 饭否内容: 消息文本内容（HTML 格式）
         - 发布 ID: 消息的唯一标识符
         - 发布时间: 消息发布时间
-        - 发布者: 发布者的显示名称
+        - 发布者: 发布者的用户名
         - 发布者 ID: 发布者的用户 ID
         - 图片链接: 如果包含图片，则提供图片链接
     """
@@ -337,6 +337,65 @@ def get_user_info(user_id: str = '') -> Dict[str, Any]:
             user_info["最新状态"] = None
         
         return user_info
+    except Exception as e:
+        return {"error": str(e)}
+
+@mcp.tool()
+def get_status_info(status_id: str) -> Dict[str, Any]:
+    """
+    获取某条饭否内容的具体信息
+    
+    调用饭否 API 的 /statuses/show/id.json 接口获取指定饭否内容的详细信息。
+    
+    Args:
+        status_id: 饭否内容的 ID
+        
+    Returns:
+        饭否内容的详细信息字典，包含：
+        - 饭否内容: 消息文本内容（HTML 格式）
+        - 发布 ID: 消息的唯一标识符
+        - 发布时间: 消息发布时间
+        - 发布者: 发布者的显示名称
+        - 发布者 ID: 发布者的用户 ID
+        - 是否收藏: 当前用户是否收藏了该消息
+        - 是否是自己: 是否是当前用户发布的消息
+        - 发布位置: 消息发布的地理位置
+        - 回复信息: 如果是回复消息，包含被回复的状态 ID、用户 ID 和用户名
+        - 图片链接: 如果包含图片，则提供图片链接
+    """
+    try:
+        client = get_fanfou_client()
+        raw_data = client.get_status_info(status_id)
+        
+        # 解析并格式化状态信息
+        status_info = {
+            "饭否内容": raw_data.get("text", ""),
+            "发布 ID": raw_data.get("id", ""),
+            "发布时间": raw_data.get("created_at", ""),
+            "发布者": raw_data.get("user", {}).get("name", ""),
+            "发布者 ID": raw_data.get("user", {}).get("id", ""),
+            "是否收藏": raw_data.get("favorited", False),
+            "是否是自己": raw_data.get("is_self", False),
+            "发布位置": raw_data.get("location", "")
+        }
+        
+        # 处理回复信息
+        if raw_data.get("in_reply_to_status_id"):
+            status_info["回复信息"] = {
+                "回复的状态 ID": raw_data.get("in_reply_to_status_id", ""),
+                "回复的用户 ID": raw_data.get("in_reply_to_user_id", ""),
+                "回复的用户名": raw_data.get("in_reply_to_screen_name", "")
+            }
+        else:
+            status_info["回复信息"] = None
+        
+        # 处理图片链接
+        if "photo" in raw_data and raw_data["photo"]:
+            status_info["图片链接"] = raw_data["photo"].get("largeurl", "")
+        else:
+            status_info["图片链接"] = None
+        
+        return status_info
     except Exception as e:
         return {"error": str(e)}
 

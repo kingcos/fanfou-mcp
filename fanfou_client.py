@@ -179,4 +179,21 @@ class FanFou:
         client = oauth2.Client(consumer, token)
 
         response, content = client.request(url)
+        return json.loads(content)
+
+    def get_status_info(self, status_id: str) -> Dict[str, Any]:
+        """
+        获取某条饭否内容的具体信息
+        
+        status_id 为饭否内容的 ID
+        """
+        print('------ get_status_info ------')
+        
+        url = f"http://api.fanfou.com/statuses/show/{status_id}.json?format=html"
+
+        consumer = oauth2.Consumer(self.api_key, self.api_secret)
+        token = oauth2.Token(self.token, self.token_secret)
+        client = oauth2.Client(consumer, token)
+
+        response, content = client.request(url)
         return json.loads(content) 
