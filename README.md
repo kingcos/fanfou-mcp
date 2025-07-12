@@ -109,9 +109,26 @@ uv run main.py
 
 详细的 API 文档请参考：[API 文档](docs/API.md)
 
+## 开发和发布
+
+### 本地测试构建
+
+```bash
+# 测试包构建
+python scripts/test_build.py
+
+# 手动构建
+uv build
+```
+
+### 发布到 PyPI
+
+本项目使用 GitHub Actions 自动发布到 PyPI。详细信息请参考：[发布指南](docs/PUBLISHING.md)
+
 ## 文档
 
 - [API 文档](docs/API.md) - 详细的工具函数说明
+- [发布指南](docs/PUBLISHING.md) - 如何发布到 PyPI
 
 ## 许可证
 

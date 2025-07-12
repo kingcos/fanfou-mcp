@@ -1,11 +1,53 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "fanfou-mcp"
 version = "0.1.0"
-description = "Add your description here"
+description = "饭否 MCP 服务器 - 基于 FastMCP 构建的饭否（Fanfou）MCP 服务器"
 readme = "README.md"
 requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [
+    { name = "kingcos", email = "kingcos@foxmail.com" },
+]
+keywords = ["fanfou", "mcp", "model-context-protocol", "social-media"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+    "Topic :: Communications :: Chat",
+]
 dependencies = [
     "fastmcp>=2.10.5",
     "oauth2>=1.9.0.post1",
     "requests>=2.32.4",
+    "twine>=5.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/kingcos/fanfou-mcp"
+Repository = "https://github.com/kingcos/fanfou-mcp"
+Issues = "https://github.com/kingcos/fanfou-mcp/issues"
+Documentation = "https://github.com/kingcos/fanfou-mcp/blob/main/docs/API.md"
+
+[project.scripts]
+fanfou-mcp = "main:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["fanfou_client.py", "main.py"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/fanfou_client.py",
+    "/main.py",
+    "/README.md",
+    "/LICENSE",
+    "/docs",
 ]
