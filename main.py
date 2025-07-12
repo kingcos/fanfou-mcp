@@ -142,6 +142,9 @@ def get_user_timeline(user_id: str = '', max_id: str = '', count: int = 5, q: st
     Returns:
         用户时间线列表，每个元素包含：
         - 饭否内容: 消息文本内容（HTML 格式）
+          * 转发：以「转@」开头，后跟用户链接，如 转@<a href="https://fanfou.com/~FgPOFSnmkW8" class="former">kingcos</a>，其中 href 中的是用户 ID，inner Text 是被转发用户的显示名称，一条饭否可能有多个转发
+          * 话题：以「#」包围，如 #<a href="/q/%E6%AD%A3%E5%9C%A8%E6%92%AD%E6%94%BE">正在播放</a>#，其中 q/ 后面的是话题名，一条饭否可能有多个话题
+          * 审核状态：如果内容末尾显示「【审核中】」，表示该内容正在审核中
         - 发布 ID: 消息的唯一标识符
         - 发布时间: 消息发布时间
         - 发布者: 发布者的用户名
@@ -190,6 +193,9 @@ def get_home_timeline(count: int = 5, max_id: str = '') -> List[Dict[str, Any]]:
     Returns:
         首页时间线列表，每个元素包含：
         - 饭否内容: 消息文本内容（HTML 格式）
+          * 转发：以「转@」开头，后跟用户链接，如 转@<a href="https://fanfou.com/~FgPOFSnmkW8" class="former">kingcos</a>，其中 href 中的是用户 ID，inner Text 是被转发用户的显示名称，一条饭否可能有多个转发
+          * 话题：以「#」包围，如 #<a href="/q/%E6%AD%A3%E5%9C%A8%E6%92%AD%E6%94%BE">正在播放</a>#，其中 q/ 后面的是话题名，一条饭否可能有多个话题
+          * 审核状态：如果内容末尾显示「【审核中】」，表示该内容正在审核中
         - 发布 ID: 消息的唯一标识符
         - 发布时间: 消息发布时间
         - 发布者: 发布者的用户名
@@ -239,6 +245,9 @@ def get_public_timeline(count: int = 5, max_id: str = '', q: str = '') -> List[D
     Returns:
         公开时间线列表，每个元素包含：
         - 饭否内容: 消息文本内容（HTML 格式）
+          * 转发：以「转@」开头，后跟用户链接，如 转@<a href="https://fanfou.com/~FgPOFSnmkW8" class="former">kingcos</a>，其中 href 中的是用户 ID，inner Text 是被转发用户的显示名称，一条饭否可能有多个转发
+          * 话题：以「#」包围，如 #<a href="/q/%E6%AD%A3%E5%9C%A8%E6%92%AD%E6%94%BE">正在播放</a>#，其中 q/ 后面的是话题名，一条饭否可能有多个话题
+          * 审核状态：如果内容末尾显示「【审核中】」，表示该内容正在审核中
         - 发布 ID: 消息的唯一标识符
         - 发布时间: 消息发布时间
         - 发布者: 发布者的用户名
@@ -353,6 +362,9 @@ def get_status_info(status_id: str) -> Dict[str, Any]:
     Returns:
         饭否内容的详细信息字典，包含：
         - 饭否内容: 消息文本内容（HTML 格式）
+          * 转发：以「转@」开头，后跟用户链接，如 转@<a href="https://fanfou.com/~FgPOFSnmkW8" class="former">kingcos</a>，其中 href 中的是用户 ID，inner Text 是被转发用户的显示名称，一条饭否可能有多个转发
+          * 话题：以「#」包围，如 #<a href="/q/%E6%AD%A3%E5%9C%A8%E6%92%AD%E6%94%BE">正在播放</a>#，其中 q/ 后面的是话题名，一条饭否可能有多个话题
+          * 审核状态：如果内容末尾显示「【审核中】」，表示该内容正在审核中
         - 发布 ID: 消息的唯一标识符
         - 发布时间: 消息发布时间
         - 发布者: 发布者的显示名称
