@@ -604,6 +604,185 @@ def manage_friendship(user_id: str, action: str) -> Dict[str, Any]:
     except Exception as e:
         return {"error": str(e)}
 
+@mcp.tool()
+def publish_status(status: str) -> Dict[str, Any]:
+    """
+    发布饭否内容（仅文字）
+    
+    调用饭否 API 的 /statuses/update.json 接口发布纯文字内容。
+    
+    Args:
+        status: 要发布的文字内容（最多140字）
+        
+    Returns:
+        发布结果字典，包含：
+        - 发布 ID: 新发布消息的唯一标识符
+        - 发布时间: 消息发布时间
+        - 发布结果: 发布是否成功的描述信息
+        - 重要提示: 关于审核的提醒信息
+    """
+    try:
+        if len(status) > 140:
+            return {"error": "饭否内容不能超过140字"}
+        
+        if not status.strip():
+            return {"error": "饭否内容不能为空"}
+        
+        client = get_fanfou_client()
+        raw_data = client.publish_status(status)
+        
+        # 解析发布结果
+        result = {
+            "发布 ID": raw_data.get("id", ""),
+            "发布时间": raw_data.get("created_at", ""),
+            "发布结果": "发布成功",
+            "重要提示": "内容已发布成功，正在等待审核，审核通过后将出现在时间线中"
+        }
+        
+        return result
+    except Exception as e:
+        return {"error": str(e)}
+
+@mcp.tool()
+def publish_photo(status: str, photo_url: str) -> Dict[str, Any]:
+    """
+    发布饭否内容（文字+图片）
+    
+    调用饭否 API 的 /photos/upload.json 接口发布带图片的内容。
+    
+    Args:
+        status: 要发布的文字内容（最多140字）
+        photo_url: 图片的网络 URL 地址
+        
+    Returns:
+        发布结果字典，包含：
+        - 发布 ID: 新发布消息的唯一标识符
+        - 发布时间: 消息发布时间
+        - 发布结果: 发布是否成功的描述信息
+        - 重要提示: 关于审核的提醒信息
+    """
+    try:
+        if len(status) > 140:
+            return {"error": "饭否内容不能超过140字"}
+        
+        if not status.strip():
+            return {"error": "饭否内容不能为空"}
+        
+        if not photo_url.strip():
+            return {"error": "图片 URL 不能为空"}
+        
+        # 验证 URL 格式
+        import re
+        url_pattern = re.compile(
+            r'^https?://'  # http:// or https://
+            r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|'  # domain...
+            r'localhost|'  # localhost...
+            r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
+            r'(?::\d+)?'  # optional port
+            r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+        
+        if not url_pattern.match(photo_url):
+            return {"error": "无效的图片 URL 格式"}
+        
+        # 检查 URL 是否看起来像图片
+        image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']
+        url_lower = photo_url.lower()
+        has_image_extension = any(url_lower.endswith(ext) for ext in image_extensions)
+        
+        # 如果没有图片扩展名，给出提示但不阻止（有些图片 URL 不包含扩展名）
+        if not has_image_extension:
+            print(f"提示：URL 不包含常见的图片扩展名，将尝试下载: {photo_url}")
+        
+        client = get_fanfou_client()
+        raw_data = client.publish_photo(status, photo_url)
+        
+        # 解析发布结果
+        result = {
+            "发布 ID": raw_data.get("id", ""),
+            "发布时间": raw_data.get("created_at", ""),
+            "发布结果": "发布成功",
+            "重要提示": "内容已发布成功，正在等待审核，审核通过后将出现在时间线中"
+        }
+        
+        return result
+    except Exception as e:
+        return {"error": str(e)}
+
+@mcp.tool()
+def delete_status(status_id: str, confirm: bool = False) -> Dict[str, Any]:
+    """
+    删除饭否内容
+    
+    调用饭否 API 的 /statuses/destroy.json 接口删除指定的饭否内容。
+    注意：只能删除自己发布的内容。
+    
+    Args:
+        status_id: 要删除的饭否内容的 ID
+        confirm: 是否确认删除（二次确认参数）
+        
+    Returns:
+        删除结果字典，包含：
+        - 删除 ID: 被删除消息的 ID
+        - 删除结果: 删除是否成功的描述信息
+        - 重要提示: 关于删除操作的提醒信息
+        
+        或者确认信息字典，包含：
+        - 需要确认: 是否需要用户确认
+        - 内容预览: 要删除的内容预览
+        - 确认提示: 如何进行确认的说明
+    """
+    try:
+        if not status_id.strip():
+            return {"error": "饭否内容 ID 不能为空"}
+        
+        client = get_fanfou_client()
+        
+        # 如果未确认，先获取内容信息进行预览，绝对不执行删除
+        if not confirm:
+            try:
+                # 获取要删除的内容信息
+                status_info = client.get_status_info(status_id)
+                
+                # 检查是否是自己的内容
+                if not status_info.get("is_self", False):
+                    return {"error": "只能删除自己发布的饭否内容"}
+                
+                # 截取内容预览（最多50字）
+                content = status_info.get("text", "")
+                # 移除HTML标签用于预览
+                import re
+                clean_content = re.sub(r'<[^>]+>', '', content)
+                content_preview = clean_content[:50] + "..." if len(clean_content) > 50 else clean_content
+                
+                return {
+                    "需要确认": True,
+                    "内容预览": content_preview,
+                    "发布时间": status_info.get("created_at", ""),
+                    "发布 ID": status_info.get("id", ""),
+                    "⚠️ 重要警告": "删除后无法恢复，请谨慎操作！",
+                    "确认提示": f"如果确认删除这条饭否，请用户明确告诉我要删除，然后我会调用 delete_status('{status_id}', confirm=True)",
+                    "🚫 绝对禁止": "AI助手不能自动确认删除，必须等待用户明确指示！"
+                }
+                
+            except Exception as e:
+                # 如果获取内容信息失败，可能是内容不存在或无权访问
+                return {"error": f"无法获取饭否内容信息，可能是内容不存在或无权访问: {str(e)}"}
+        
+        # 只有当用户明确确认时才执行删除
+        # 这里应该只有在用户明确要求删除时才会到达
+        raw_data = client.delete_status(status_id)
+        
+        # 解析删除结果
+        result = {
+            "删除 ID": raw_data.get("id", ""),
+            "删除结果": "删除成功",
+            "重要提示": "饭否内容已成功删除，将从时间线中消失"
+        }
+        
+        return result
+    except Exception as e:
+        return {"error": str(e)}
+
 if __name__ == "__main__":
     # 启动服务器
     mcp.run()

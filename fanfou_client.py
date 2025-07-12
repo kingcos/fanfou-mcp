@@ -240,3 +240,141 @@ class FanFou:
 
         response, content = client.request(url, method='POST', body=urllib.parse.urlencode(params))
         return json.loads(content) 
+
+    def publish_status(self, status: str) -> Dict[str, Any]:
+        """
+        发布饭否内容（仅文字）
+        
+        status 为要发布的文字内容（最多140字）
+        """
+        print('------ publish_status ------')
+        
+        if len(status) > 140:
+            raise ValueError("饭否内容不能超过140字")
+        
+        url = "http://api.fanfou.com/statuses/update.json"
+        params = {'status': status}
+
+        consumer = oauth2.Consumer(self.api_key, self.api_secret)
+        token = oauth2.Token(self.token, self.token_secret)
+        client = oauth2.Client(consumer, token)
+
+        response, content = client.request(url, method='POST', body=urllib.parse.urlencode(params))
+        return json.loads(content)
+
+    def publish_photo(self, status: str, photo_url: str) -> Dict[str, Any]:
+        """
+        发布饭否内容（文字+图片）
+        
+        status 为要发布的文字内容（最多140字）
+        photo_url 为图片的网络 URL 地址
+        """
+        print('------ publish_photo ------')
+        
+        if len(status) > 140:
+            raise ValueError("饭否内容不能超过140字")
+        
+        # 下载图片
+        import requests
+        try:
+            print(f"正在下载图片: {photo_url}")
+            response = requests.get(photo_url, timeout=30)
+            response.raise_for_status()
+            photo_data = response.content
+            
+            # 获取图片的 MIME 类型
+            content_type = response.headers.get('content-type', '')
+            if content_type.startswith('image/'):
+                mime_type = content_type
+            else:
+                # 根据 URL 扩展名猜测 MIME 类型
+                import mimetypes
+                mime_type, _ = mimetypes.guess_type(photo_url)
+                if mime_type is None or not mime_type.startswith('image/'):
+                    mime_type = 'image/jpeg'  # 默认为 JPEG
+            
+        except requests.exceptions.RequestException as e:
+            raise ValueError(f"无法下载图片: {str(e)}")
+        except Exception as e:
+            raise ValueError(f"下载图片时发生错误: {str(e)}")
+        
+        # 检查图片大小（饭否图片限制通常为5MB）
+        if len(photo_data) > 5 * 1024 * 1024:  # 5MB
+            raise ValueError("图片文件过大，请选择小于5MB的图片")
+        
+        # 检查是否为有效的图片数据
+        if len(photo_data) < 100:  # 太小的文件可能不是有效图片
+            raise ValueError("下载的文件可能不是有效的图片")
+        
+        url = "http://api.fanfou.com/photos/upload.json"
+        
+        # 构建multipart/form-data格式的数据
+        import uuid
+        
+        # 生成边界标识符
+        boundary = f"----formdata-{uuid.uuid4().hex}"
+        
+        # 构建multipart数据
+        body_parts = []
+        
+        # 添加status字段
+        body_parts.append(f'--{boundary}')
+        body_parts.append('Content-Disposition: form-data; name="status"')
+        body_parts.append('Content-Type: text/plain')
+        body_parts.append('')
+        body_parts.append(status)
+        
+        # 添加photo字段
+        # 根据 MIME 类型确定文件扩展名
+        if 'png' in mime_type:
+            filename = 'image.png'
+        elif 'gif' in mime_type:
+            filename = 'image.gif'
+        elif 'bmp' in mime_type:
+            filename = 'image.bmp'
+        elif 'webp' in mime_type:
+            filename = 'image.webp'
+        else:
+            filename = 'image.jpg'
+            
+        body_parts.append(f'--{boundary}')
+        body_parts.append(f'Content-Disposition: form-data; name="photo"; filename="{filename}"')
+        body_parts.append(f'Content-Type: {mime_type}')
+        body_parts.append('')
+        
+        # 将文本部分合并
+        body_text = '\r\n'.join(body_parts) + '\r\n'
+        
+        # 构建完整的body（文本 + 图片数据 + 结束边界）
+        body = body_text.encode('utf-8') + photo_data + f'\r\n--{boundary}--\r\n'.encode('utf-8')
+        
+        # 设置请求头
+        headers = {
+            'Content-Type': f'multipart/form-data; boundary={boundary}',
+            'Content-Length': str(len(body))
+        }
+
+        consumer = oauth2.Consumer(self.api_key, self.api_secret)
+        token = oauth2.Token(self.token, self.token_secret)
+        client = oauth2.Client(consumer, token)
+
+        response, content = client.request(url, method='POST', body=body, headers=headers)
+        return json.loads(content) 
+
+    def delete_status(self, status_id: str) -> Dict[str, Any]:
+        """
+        删除饭否内容
+        
+        status_id 为要删除的饭否内容的 ID
+        """
+        print('------ delete_status ------')
+        
+        url = "http://api.fanfou.com/statuses/destroy.json"
+        params = {'id': status_id}
+
+        consumer = oauth2.Consumer(self.api_key, self.api_secret)
+        token = oauth2.Token(self.token, self.token_secret)
+        client = oauth2.Client(consumer, token)
+
+        response, content = client.request(url, method='POST', body=urllib.parse.urlencode(params))
+        return json.loads(content) 
