@@ -473,7 +473,7 @@ def get_status_info(status_id: str) -> Dict[str, Any]:
         return {"error": str(e)}
 
 @mcp.tool()
-def manage_favorite(status_id: str, action: str) -> Dict[str, Any]:
+def manage_favorite(status_id: str, action: str, confirm: bool = False) -> Dict[str, Any]:
     """
     管理饭否内容的收藏状态
     
@@ -483,18 +483,69 @@ def manage_favorite(status_id: str, action: str) -> Dict[str, Any]:
     Args:
         status_id: 饭否内容的 ID
         action: 操作类型，"create" 表示收藏，"destroy" 表示取消收藏
+        confirm: 是否确认操作（二次确认参数）
         
     Returns:
         操作结果字典，包含：
         - 是否收藏: 操作后的收藏状态
         - 操作结果: 操作是否成功的描述信息
         - 操作类型: 执行的具体操作（收藏/取消收藏）
+        
+        或者确认信息字典，包含：
+        - 需要确认: 是否需要用户确认
+        - 内容预览: 要操作的内容预览
+        - 确认提示: 如何进行确认的说明
     """
     try:
         if action not in ['create', 'destroy']:
             return {"error": "action 参数必须是 'create' 或 'destroy'"}
         
+        if not status_id.strip():
+            return {"error": "饭否内容 ID 不能为空"}
+        
         client = get_fanfou_client()
+        
+        # 如果未确认，先获取内容信息进行预览，绝对不执行操作
+        if not confirm:
+            try:
+                # 获取要操作的内容信息
+                status_info = client.get_status_info(status_id)
+                
+                # 截取内容预览（最多50字）
+                content = status_info.get("text", "")
+                # 移除HTML标签用于预览
+                import re
+                clean_content = re.sub(r'<[^>]+>', '', content)
+                content_preview = clean_content[:50] + "..." if len(clean_content) > 50 else clean_content
+                
+                operation_name = "收藏" if action == "create" else "取消收藏"
+                current_favorited = status_info.get("favorited", False)
+                
+                # 检查操作是否有意义
+                if action == "create" and current_favorited:
+                    return {"error": "该内容已经收藏过了"}
+                elif action == "destroy" and not current_favorited:
+                    return {"error": "该内容尚未收藏"}
+                
+                return {
+                    "需要确认": True,
+                    "内容预览": content_preview,
+                    "发布时间": status_info.get("created_at", ""),
+                    "发布 ID": status_info.get("id", ""),
+                    "发布者": status_info.get("user", {}).get("name", ""),
+                    "当前收藏状态": "已收藏" if current_favorited else "未收藏",
+                    "操作类型": operation_name,
+                    "⚠️ 重要提示": f"即将{operation_name}此内容，请确认是否继续",
+                    "确认提示": f"如果确认{operation_name}这条饭否，请用户明确告诉我要{operation_name}，然后我会调用 manage_favorite('{status_id}', '{action}', confirm=True)",
+                    "🚫 绝对禁止": "AI助手不能自动确认操作，必须等待用户明确指示！"
+                }
+                
+            except Exception as e:
+                # 如果获取内容信息失败，可能是内容不存在或无权访问
+                return {"error": f"无法获取饭否内容信息，可能是内容不存在或无权访问: {str(e)}"}
+        
+        # 只有当用户明确确认时才执行操作
+        # 这里应该只有在用户明确要求操作时才会到达
         raw_data = client.manage_favorite(status_id, action)
         
         # 解析操作结果
@@ -518,7 +569,7 @@ def manage_favorite(status_id: str, action: str) -> Dict[str, Any]:
         return {"error": str(e)}
 
 @mcp.tool()
-def manage_friendship(user_id: str, action: str) -> Dict[str, Any]:
+def manage_friendship(user_id: str, action: str, confirm: bool = False) -> Dict[str, Any]:
     """
     管理用户关注状态
     
@@ -532,6 +583,7 @@ def manage_friendship(user_id: str, action: str) -> Dict[str, Any]:
     Args:
         user_id: 目标用户的 ID
         action: 操作类型，"create" 表示关注，"destroy" 表示取消关注
+        confirm: 是否确认操作（二次确认参数）
         
     Returns:
         操作结果字典，包含：
@@ -540,10 +592,18 @@ def manage_friendship(user_id: str, action: str) -> Dict[str, Any]:
         - 操作类型: 执行的具体操作（关注/取消关注）
         - 用户信息: 目标用户的基本信息
         - 特殊情况: 如果是受保护账号的关注申请，会包含相关提示
+        
+        或者确认信息字典，包含：
+        - 需要确认: 是否需要用户确认
+        - 用户预览: 要操作的用户预览
+        - 确认提示: 如何进行确认的说明
     """
     try:
         if action not in ['create', 'destroy']:
             return {"error": "action 参数必须是 'create' 或 'destroy'"}
+        
+        if not user_id.strip():
+            return {"error": "用户 ID 不能为空"}
         
         client = get_fanfou_client()
         
@@ -552,10 +612,45 @@ def manage_friendship(user_id: str, action: str) -> Dict[str, Any]:
             user_info = client.get_user_info(user_id)
             target_username = user_info.get("name", "")
             is_protected = user_info.get("protected", False)
+            current_following = user_info.get("following", False)
         except Exception as e:
             return {"error": f"无法获取用户信息: {str(e)}"}
         
-        # 执行关注/取消关注操作
+        # 如果未确认，先显示用户信息进行预览，绝对不执行操作
+        if not confirm:
+            operation_name = "关注" if action == "create" else "取消关注"
+            
+            # 检查操作是否有意义
+            if action == "create" and current_following:
+                return {"error": "您已经关注了该用户"}
+            elif action == "destroy" and not current_following:
+                return {"error": "您尚未关注该用户"}
+            
+            # 特殊提示：受保护账号的关注申请
+            special_note = ""
+            if action == "create" and is_protected:
+                special_note = "⚠️ 注意：该用户账号受保护，关注操作将变为申请关注，需要对方确认后才能生效"
+            
+            return {
+                "需要确认": True,
+                "用户预览": {
+                    "用户名": target_username,
+                    "用户 ID": user_id,
+                    "是否受保护": is_protected,
+                    "粉丝数": user_info.get("followers_count", 0),
+                    "发布数": user_info.get("statuses_count", 0),
+                    "个人描述": user_info.get("description", "")[:100] + "..." if len(user_info.get("description", "")) > 100 else user_info.get("description", "")
+                },
+                "当前关注状态": "已关注" if current_following else "未关注",
+                "操作类型": operation_name,
+                "⚠️ 重要提示": f"即将{operation_name}用户 {target_username}，请确认是否继续",
+                "特殊情况": special_note if special_note else None,
+                "确认提示": f"如果确认{operation_name}这个用户，请用户明确告诉我要{operation_name}，然后我会调用 manage_friendship('{user_id}', '{action}', confirm=True)",
+                "🚫 绝对禁止": "AI助手不能自动确认操作，必须等待用户明确指示！"
+            }
+        
+        # 只有当用户明确确认时才执行操作
+        # 这里应该只有在用户明确要求操作时才会到达
         raw_data = client.manage_friendship(user_id, action)
         
         # 检查是否有错误消息（特殊情况：受保护账号的关注申请）
@@ -605,7 +700,7 @@ def manage_friendship(user_id: str, action: str) -> Dict[str, Any]:
         return {"error": str(e)}
 
 @mcp.tool()
-def publish_status(status: str) -> Dict[str, Any]:
+def publish_status(status: str, confirm: bool = False) -> Dict[str, Any]:
     """
     发布饭否内容（仅文字）
     
@@ -613,6 +708,7 @@ def publish_status(status: str) -> Dict[str, Any]:
     
     Args:
         status: 要发布的文字内容（最多140字）
+        confirm: 是否确认发布（二次确认参数）
         
     Returns:
         发布结果字典，包含：
@@ -620,6 +716,11 @@ def publish_status(status: str) -> Dict[str, Any]:
         - 发布时间: 消息发布时间
         - 发布结果: 发布是否成功的描述信息
         - 重要提示: 关于审核的提醒信息
+        
+        或者确认信息字典，包含：
+        - 需要确认: 是否需要用户确认
+        - 内容预览: 要发布的内容预览
+        - 确认提示: 如何进行确认的说明
     """
     try:
         if len(status) > 140:
@@ -628,6 +729,20 @@ def publish_status(status: str) -> Dict[str, Any]:
         if not status.strip():
             return {"error": "饭否内容不能为空"}
         
+        # 如果未确认，先显示内容预览，绝对不执行发布
+        if not confirm:
+            return {
+                "需要确认": True,
+                "内容预览": status,
+                "字数统计": f"{len(status)}/140",
+                "操作类型": "发布饭否",
+                "⚠️ 重要提示": "即将发布此内容到饭否，发布后需要等待审核，请确认是否继续",
+                "确认提示": f"如果确认发布这条饭否，请用户明确告诉我要发布，然后我会调用 publish_status('{status}', confirm=True)",
+                "🚫 绝对禁止": "AI助手不能自动确认发布，必须等待用户明确指示！"
+            }
+        
+        # 只有当用户明确确认时才执行发布
+        # 这里应该只有在用户明确要求发布时才会到达
         client = get_fanfou_client()
         raw_data = client.publish_status(status)
         
@@ -644,7 +759,7 @@ def publish_status(status: str) -> Dict[str, Any]:
         return {"error": str(e)}
 
 @mcp.tool()
-def publish_photo(status: str, photo_url: str) -> Dict[str, Any]:
+def publish_photo(status: str, photo_url: str, confirm: bool = False) -> Dict[str, Any]:
     """
     发布饭否内容（文字+图片）
     
@@ -653,6 +768,7 @@ def publish_photo(status: str, photo_url: str) -> Dict[str, Any]:
     Args:
         status: 要发布的文字内容（最多140字）
         photo_url: 图片的网络 URL 地址
+        confirm: 是否确认发布（二次确认参数）
         
     Returns:
         发布结果字典，包含：
@@ -660,6 +776,11 @@ def publish_photo(status: str, photo_url: str) -> Dict[str, Any]:
         - 发布时间: 消息发布时间
         - 发布结果: 发布是否成功的描述信息
         - 重要提示: 关于审核的提醒信息
+        
+        或者确认信息字典，包含：
+        - 需要确认: 是否需要用户确认
+        - 内容预览: 要发布的内容预览
+        - 确认提示: 如何进行确认的说明
     """
     try:
         if len(status) > 140:
@@ -688,6 +809,28 @@ def publish_photo(status: str, photo_url: str) -> Dict[str, Any]:
         image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']
         url_lower = photo_url.lower()
         has_image_extension = any(url_lower.endswith(ext) for ext in image_extensions)
+        
+        # 如果未确认，先显示内容预览，绝对不执行发布
+        if not confirm:
+            # 如果没有图片扩展名，给出提示
+            url_warning = ""
+            if not has_image_extension:
+                url_warning = "⚠️ 注意：URL 不包含常见的图片扩展名，将尝试下载并检测图片格式"
+            
+            return {
+                "需要确认": True,
+                "内容预览": status,
+                "字数统计": f"{len(status)}/140",
+                "图片链接": photo_url,
+                "操作类型": "发布带图片的饭否",
+                "⚠️ 重要提示": "即将发布此内容和图片到饭否，发布后需要等待审核，请确认是否继续",
+                "URL 提示": url_warning if url_warning else "图片 URL 格式正常",
+                "确认提示": f"如果确认发布这条带图片的饭否，请用户明确告诉我要发布，然后我会调用 publish_photo('{status}', '{photo_url}', confirm=True)",
+                "🚫 绝对禁止": "AI助手不能自动确认发布，必须等待用户明确指示！"
+            }
+        
+        # 只有当用户明确确认时才执行发布
+        # 这里应该只有在用户明确要求发布时才会到达
         
         # 如果没有图片扩展名，给出提示但不阻止（有些图片 URL 不包含扩展名）
         if not has_image_extension:
