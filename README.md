@@ -38,6 +38,27 @@ uv run main.py
 
 ### MCP 配置
 
+#### 方式1：使用 OAuth Token（推荐）
+
+```json
+{
+  "mcpServers": {
+    "fanfou-mcp": {
+      "command": "uv",
+      "args": ["--directory", "/path/to/your/fanfou-mcp/main.py", "run", "python", "main.py"],
+      "env": {
+        "FANFOU_API_KEY": "your_api_key_here",
+        "FANFOU_API_SECRET": "your_api_secret_here",
+        "FANFOU_OAUTH_TOKEN": "your_oauth_token_here",
+        "FANFOU_OAUTH_TOKEN_SECRET": "your_oauth_token_secret_here"
+      }
+    }
+  }
+}
+```
+
+#### 方式2：使用用户名密码（首次登录）
+
 ```json
 {
   "mcpServers": {
@@ -57,9 +78,26 @@ uv run main.py
 
 **注意**: 
 - 请将 `/path/to/your/fanfou-mcp/main.py` 替换为你项目的实际路径
+- **推荐使用方式1**：OAuth Token 方式避免每次都需要登录
+- **首次使用**：如果没有 OAuth Token，请先使用方式2，系统会自动生成并显示 OAuth Token，然后切换到方式1
 - 请将环境变量中的占位符替换为你的实际饭否 API 凭据
 
 ## 可用工具
+
+### generate_oauth_token
+
+生成 OAuth Token
+
+**功能:**
+- 使用用户名密码生成 OAuth Token
+- 用于后续免密登录，避免重复输入用户名密码
+
+**前提条件:**
+- 需要设置 `FANFOU_USERNAME` 和 `FANFOU_PASSWORD` 环境变量
+
+**返回:**
+- 包含 OAuth Token 信息的字典
+- 控制台会显示详细的 Token 信息和使用说明
 
 ### get_user_timeline
 

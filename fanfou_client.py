@@ -6,20 +6,34 @@
 import json
 import urllib.parse
 import oauth2
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional, Tuple
 
 
 class FanFou:
     """饭否 API 客户端"""
     host = "fanfou.com"
 
-    def __init__(self, api_key: str, api_secret: str, username: str, password: str):
+    def __init__(self, api_key: str, api_secret: str, username: str = '', password: str = '', 
+                 oauth_token: str = '', oauth_token_secret: str = ''):
         self.api_key = api_key
         self.api_secret = api_secret
-        self.token, self.token_secret = self.login(username, password)
+        self.username = username
+        self.password = password
+        
+        # 优先使用传入的 oauth token
+        if oauth_token and oauth_token_secret:
+            print('------ 使用已有的 OAuth Token ------')
+            self.token = oauth_token
+            self.token_secret = oauth_token_secret
+        elif username and password:
+            print('------ 使用用户名密码登录 ------')
+            self.token, self.token_secret = self.login(username, password)
+        else:
+            raise Exception("必须提供 oauth_token + oauth_token_secret 或者 username + password")
+        
         self.user_id = self.get_current_user_id()
 
-    def login(self, username: str, password: str) -> tuple:
+    def login(self, username: str, password: str) -> Tuple[str, str]:
         """登录获取 OAuth token"""
         print('------ login ------')
         params = {'x_auth_username': username, 'x_auth_password': password, 'x_auth_mode': 'client_auth'}
@@ -33,7 +47,22 @@ class FanFou:
         tokens = dict(urllib.parse.parse_qsl(token_bytes.decode("utf-8")))
 
         if len(tokens) == 2:
-            return tokens['oauth_token'], tokens['oauth_token_secret']
+            oauth_token = tokens['oauth_token']
+            oauth_token_secret = tokens['oauth_token_secret']
+            print('=' * 60)
+            print('🎉 登录成功！已生成 OAuth Token')
+            print('=' * 60)
+            print(f'📋 请将以下环境变量保存到你的配置中：')
+            print()
+            print(f'FANFOU_OAUTH_TOKEN={oauth_token}')
+            print(f'FANFOU_OAUTH_TOKEN_SECRET={oauth_token_secret}')
+            print()
+            print('💡 提示：')
+            print('1. 将上述环境变量添加到你的 .env 文件中')
+            print('2. 添加后即可移除 FANFOU_USERNAME 和 FANFOU_PASSWORD')
+            print('3. OAuth Token 方式更安全且避免重复登录')
+            print('=' * 60)
+            return oauth_token, oauth_token_secret
         else:
             print('登录失败！')
             raise Exception('登录失败，请检查用户名和密码')
@@ -54,9 +83,9 @@ class FanFou:
 
     def request_user_timeline(self, user_id: str = '', max_id: str = '', count: int = 5) -> List[Dict[str, Any]]:
         """
-        根据用户 ID 获取某个用户时间线
-        如果 user_id 为空，则获取当前用户时间线
-        max_id 为空，则获取最新时间线
+        根据用户 ID 获取某个用户饭否的时间线
+        user_id 为用户 ID，如果为空，则获取当前用户时间线
+        max_id 为饭否内容最大 ID，如果为空，则获取最新时间线
         count 为获取数量，默认 5 条
         """
         print('------ request_user_timeline ------')
@@ -76,8 +105,8 @@ class FanFou:
 
     def get_home_timeline(self, count: int = 5, max_id: str = '') -> List[Dict[str, Any]]:
         """
-        获取当前用户首页时间线
-        如果 max_id 为空，则获取最新时间线
+        获取当前用户首页饭否的时间线
+        max_id 为饭否内容最大 ID，如果为空，则获取最新时间线
         count 为获取数量，默认 5 条
         """
         print('------ get_home_timeline ------')
