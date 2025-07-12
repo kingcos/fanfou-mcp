@@ -399,6 +399,51 @@ def get_status_info(status_id: str) -> Dict[str, Any]:
     except Exception as e:
         return {"error": str(e)}
 
+@mcp.tool()
+def manage_favorite(status_id: str, action: str) -> Dict[str, Any]:
+    """
+    管理饭否内容的收藏状态
+    
+    调用饭否 API 的 /favorites/create/id.json 或 /favorites/destroy/id.json 接口
+    来收藏或取消收藏指定的饭否内容。
+    
+    Args:
+        status_id: 饭否内容的 ID
+        action: 操作类型，"create" 表示收藏，"destroy" 表示取消收藏
+        
+    Returns:
+        操作结果字典，包含：
+        - 是否收藏: 操作后的收藏状态
+        - 操作结果: 操作是否成功的描述信息
+        - 操作类型: 执行的具体操作（收藏/取消收藏）
+    """
+    try:
+        if action not in ['create', 'destroy']:
+            return {"error": "action 参数必须是 'create' 或 'destroy'"}
+        
+        client = get_fanfou_client()
+        raw_data = client.manage_favorite(status_id, action)
+        
+        # 解析操作结果
+        favorited = raw_data.get("favorited", False)
+        
+        if action == "create":
+            success_msg = "收藏成功" if favorited else "收藏失败"
+            operation = "收藏"
+        else:  # destroy
+            success_msg = "取消收藏成功" if not favorited else "取消收藏失败"
+            operation = "取消收藏"
+        
+        result = {
+            "是否收藏": favorited,
+            "操作结果": success_msg,
+            "操作类型": operation
+        }
+        
+        return result
+    except Exception as e:
+        return {"error": str(e)}
+
 if __name__ == "__main__":
     # 启动服务器
     mcp.run()
