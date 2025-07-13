@@ -78,7 +78,7 @@ pinned: false
 
 **Huggingface 项目地址**: [https://huggingface.co/spaces/kingcos/fanfou-mcp](https://huggingface.co/spaces/kingcos/fanfou-mcp)
 
-注意，首次登录可使用 uvx + 用户名密码，以获取 OAuth Token 与 OAuth-Token-Secret，例如：
+注意，首次登录可使用用户名密码，以获取 OAuth Token 与 OAuth-Token-Secret，例如：
 
 ```json
 {
@@ -134,7 +134,7 @@ pinned: false
 }
 ```
 
-注意，首次登录可使用 uvx + 用户名密码，以获取 OAuth Token 与 OAuth-Token-Secret，例如：
+注意，首次登录可使用用户名密码，以获取 OAuth Token 与 OAuth-Token-Secret，例如：
 
 ```json
 {
