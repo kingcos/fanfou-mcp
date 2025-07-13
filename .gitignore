@@ -147,4 +147,7 @@ Thumbs.db
 # Project specific
 config.json
 *.key
-*.secret 
+*.secret
+
+# Gradio temporary files and certificates
+.gradio/ 

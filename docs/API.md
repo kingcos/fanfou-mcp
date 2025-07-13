@@ -2,6 +2,26 @@
 
 本文档详细描述了饭否 MCP 服务器提供的所有工具函数。
 
+## 认证方式
+
+### 环境变量方式（PyPI 包）
+使用环境变量传递认证信息：
+- `FANFOU_API_KEY` - 饭否应用的 API Key
+- `FANFOU_API_SECRET` - 饭否应用的 API Secret  
+- `FANFOU_OAUTH_TOKEN` - OAuth Token（推荐）
+- `FANFOU_OAUTH_TOKEN_SECRET` - OAuth Token Secret（推荐）
+- `FANFOU_USERNAME` - 饭否用户名（首次使用）
+- `FANFOU_PASSWORD` - 饭否密码（首次使用）
+
+### HTTP 头方式（SSE 服务）
+使用 HTTP 头传递认证信息，支持多用户隔离：
+- `X-Fanfou-Api-Key` - 饭否应用的 API Key
+- `X-Fanfou-Api-Secret` - 饭否应用的 API Secret
+- `X-Fanfou-OAuth-Token` - OAuth Token（推荐）
+- `X-Fanfou-OAuth-Token-Secret` - OAuth Token Secret（推荐）
+- `X-Fanfou-Username` - 饭否用户名（首次使用）
+- `X-Fanfou-Password` - 饭否密码（首次使用）
+
 ## 认证相关
 
 ### generate_oauth_token
@@ -13,7 +33,8 @@
 - 用于后续免密登录，避免重复输入用户名密码
 
 **前提条件:**
-- 需要设置 `FANFOU_USERNAME` 和 `FANFOU_PASSWORD` 环境变量
+- 环境变量方式：需要设置 `FANFOU_USERNAME` 和 `FANFOU_PASSWORD` 环境变量
+- HTTP 头方式：需要传递 `X-Fanfou-Username` 和 `X-Fanfou-Password` 头部
 
 **返回:**
 - 包含 OAuth Token 信息的字典
