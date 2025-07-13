@@ -19,36 +19,6 @@
 - uv 包管理器（用于 `uvx` 命令）
 - 饭否账号和 API 密钥
 
-### 使用方式
-
-#### 推荐：直接使用 uvx（无需本地安装）
-
-```bash
-# uvx 会自动从 PyPI 下载并运行最新版本
-uvx fanfou-mcp
-
-# 如果遇到缓存问题，可以强制重新安装最新版本
-uvx --force-reinstall fanfou-mcp
-```
-
-#### 本地开发模式
-
-如果你需要修改代码或进行开发：
-
-```bash
-# 克隆仓库
-git clone https://github.com/kingcos/fanfou-mcp.git
-cd fanfou-mcp
-
-# 安装依赖
-uv sync
-
-# 运行服务器
-python main.py
-# 或者使用 uv
-uv run main.py
-```
-
 ## 客户端配置
 
 ### MCP 配置
