@@ -26,6 +26,9 @@
 ```bash
 # uvx 会自动从 PyPI 下载并运行最新版本
 uvx fanfou-mcp
+
+# 如果遇到缓存问题，可以强制重新安装最新版本
+uvx --force-reinstall fanfou-mcp
 ```
 
 #### 本地开发模式
@@ -58,6 +61,25 @@ uv run main.py
     "fanfou-mcp": {
       "command": "uvx",
       "args": ["fanfou-mcp"],
+      "env": {
+        "FANFOU_API_KEY": "your_api_key_here",
+        "FANFOU_API_SECRET": "your_api_secret_here",
+        "FANFOU_OAUTH_TOKEN": "your_oauth_token_here",
+        "FANFOU_OAUTH_TOKEN_SECRET": "your_oauth_token_secret_here"
+      }
+    }
+  }
+}
+```
+
+**如果遇到导入错误，请使用强制更新版本**：
+
+```json
+{
+  "mcpServers": {
+    "fanfou-mcp": {
+      "command": "uvx",
+      "args": ["--force-reinstall", "fanfou-mcp"],
       "env": {
         "FANFOU_API_KEY": "your_api_key_here",
         "FANFOU_API_SECRET": "your_api_secret_here",
@@ -109,6 +131,7 @@ uv run main.py
 
 **注意**: 
 - **推荐使用方式1**：`uvx` 会自动从 PyPI 下载和运行最新版本，无需本地安装
+- **缓存问题**：如果遇到导入错误，可能是 `uvx` 缓存了旧版本，请在配置中将 `"args": ["fanfou-mcp"]` 改为 `"args": ["--force-reinstall", "fanfou-mcp"]` 来强制更新
 - **OAuth Token 方式**：避免每次都需要登录，更安全便捷
 - **首次使用**：如果没有 OAuth Token，请先使用方式2，系统会自动生成并显示 OAuth Token，然后切换到方式1
 - **本地开发**：如果你需要修改代码或调试，可以使用方式3
