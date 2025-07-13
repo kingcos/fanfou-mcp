@@ -2,6 +2,8 @@
 
 基于 FastMCP 构建的饭否（Fanfou）MCP 服务器，提供饭否相关的工具和服务。
 
+[![Publish to PyPI](https://github.com/kingcos/fanfou-mcp/actions/workflows/publish.yml/badge.svg)](https://github.com/kingcos/fanfou-mcp/actions/workflows/publish.yml)
+
 ## 功能特性
 
 - 🛠️ 基于 FastMCP 框架构建
@@ -14,22 +16,32 @@
 ### 前提条件
 
 - Python 3.11+
-- uv 包管理器
+- uv 包管理器（用于 `uvx` 命令）
 - 饭否账号和 API 密钥
 
-### 安装依赖
+### 使用方式
+
+#### 推荐：直接使用 uvx（无需本地安装）
 
 ```bash
-# 安装依赖
-uv sync
+# uvx 会自动从 PyPI 下载并运行最新版本
+uvx fanfou-mcp
 ```
 
-### 运行服务器
+#### 本地开发模式
+
+如果你需要修改代码或进行开发：
 
 ```bash
-# 直接运行
-python main.py
+# 克隆仓库
+git clone https://github.com/kingcos/fanfou-mcp.git
+cd fanfou-mcp
 
+# 安装依赖
+uv sync
+
+# 运行服务器
+python main.py
 # 或者使用 uv
 uv run main.py
 ```
@@ -38,7 +50,45 @@ uv run main.py
 
 ### MCP 配置
 
-#### 方式1：使用 OAuth Token（推荐）
+#### 方式1：使用 uvx（推荐，无需本地安装）
+
+```json
+{
+  "mcpServers": {
+    "fanfou-mcp": {
+      "command": "uvx",
+      "args": ["fanfou-mcp"],
+      "env": {
+        "FANFOU_API_KEY": "your_api_key_here",
+        "FANFOU_API_SECRET": "your_api_secret_here",
+        "FANFOU_OAUTH_TOKEN": "your_oauth_token_here",
+        "FANFOU_OAUTH_TOKEN_SECRET": "your_oauth_token_secret_here"
+      }
+    }
+  }
+}
+```
+
+#### 方式2：使用 uvx + 用户名密码（首次登录）
+
+```json
+{
+  "mcpServers": {
+    "fanfou-mcp": {
+      "command": "uvx",
+      "args": ["fanfou-mcp"],
+      "env": {
+        "FANFOU_API_KEY": "your_api_key_here",
+        "FANFOU_API_SECRET": "your_api_secret_here",
+        "FANFOU_USERNAME": "your_username_here",
+        "FANFOU_PASSWORD": "your_password_here"
+      }
+    }
+  }
+}
+```
+
+#### 方式3：本地开发模式
 
 ```json
 {
@@ -57,29 +107,11 @@ uv run main.py
 }
 ```
 
-#### 方式2：使用用户名密码（首次登录）
-
-```json
-{
-  "mcpServers": {
-    "fanfou-mcp": {
-      "command": "uv",
-      "args": ["--directory", "/path/to/your/fanfou-mcp", "run", "python", "main.py"],
-      "env": {
-        "FANFOU_API_KEY": "your_api_key_here",
-        "FANFOU_API_SECRET": "your_api_secret_here",
-        "FANFOU_USERNAME": "your_username_here",
-        "FANFOU_PASSWORD": "your_password_here"
-      }
-    }
-  }
-}
-```
-
 **注意**: 
-- 请将 `/path/to/your/fanfou-mcp` 替换为你项目的实际路径
-- **推荐使用方式1**：OAuth Token 方式避免每次都需要登录
+- **推荐使用方式1**：`uvx` 会自动从 PyPI 下载和运行最新版本，无需本地安装
+- **OAuth Token 方式**：避免每次都需要登录，更安全便捷
 - **首次使用**：如果没有 OAuth Token，请先使用方式2，系统会自动生成并显示 OAuth Token，然后切换到方式1
+- **本地开发**：如果你需要修改代码或调试，可以使用方式3
 - 请将环境变量中的占位符替换为你的实际饭否 API 凭据
 
 ## 可用工具

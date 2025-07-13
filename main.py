@@ -926,6 +926,10 @@ def delete_status(status_id: str, confirm: bool = False) -> Dict[str, Any]:
     except Exception as e:
         return {"error": str(e)}
 
-if __name__ == "__main__":
+def main():
+    """MCP 服务器的主入口点"""
     # 启动服务器
     mcp.run()
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,63 @@
+name: Publish to PyPI (with API Token)
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      test_pypi:
+        description: 'Publish to Test PyPI instead of PyPI'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    environment: 
+      name: ${{ github.event.inputs.test_pypi == 'true' && 'test-pypi' || 'pypi' }}
+      url: ${{ github.event.inputs.test_pypi == 'true' && 'https://test.pypi.org/p/fanfou-mcp' || 'https://pypi.org/p/fanfou-mcp' }}
+    permissions:
+      contents: read   # 用于读取仓库内容
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        
+    - name: Install uv
+      uses: astral-sh/setup-uv@v3
+      with:
+        enable-cache: true
+        
+    - name: Install dependencies
+      run: uv sync
+      
+    - name: Build package
+      run: uv build
+      
+    - name: List built packages
+      run: |
+        echo "Built packages:"
+        ls -la dist/
+      
+    - name: Check package
+      run: |
+        uv run twine check dist/*
+        
+    - name: Publish to Test PyPI
+      if: github.event.inputs.test_pypi == 'true'
+      uses: pypa/gh-action-pypi-publish@v1.10.3
+      with:
+        repository-url: https://test.pypi.org/legacy/
+        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+        
+    - name: Publish to PyPI
+      if: github.event.inputs.test_pypi != 'true'
+      uses: pypa/gh-action-pypi-publish@v1.10.3
+      with:
+        password: ${{ secrets.PYPI_API_TOKEN }} 

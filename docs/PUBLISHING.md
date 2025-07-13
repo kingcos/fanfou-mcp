@@ -64,10 +64,18 @@ uv run twine check dist/*
 
 ## ⚙️ PyPI 配置要求
 
-### 1. 可信发布设置（推荐）
+我们提供了两种认证方式，你可以选择其中一种：
 
-为了使用 GitHub Actions 自动发布，需要在 PyPI 上配置可信发布：
+### 方式 A：可信发布设置（推荐）
 
+使用 `.github/workflows/publish.yml` 工作流。
+
+**优点**：
+- 更安全，不需要管理 API Token
+- PyPI 官方推荐的方式
+- 自动轮换凭据
+
+**配置步骤**：
 1. **登录 PyPI**：访问 https://pypi.org/
 2. **创建项目**（如果是首次发布）
 3. **配置可信发布**：
@@ -79,9 +87,35 @@ uv run twine check dist/*
      - Workflow: `publish.yml`
      - Environment: `pypi`
 
-### 2. GitHub 环境设置
+### 方式 B：API Token 认证
 
-在 GitHub 仓库中配置环境：
+使用 `.github/workflows/publish-with-token.yml` 工作流。
+
+**优点**：
+- 设置简单
+- 适合个人项目
+- 立即可用
+
+**配置步骤**：
+1. **获取 PyPI API Token**：
+   - 登录 https://pypi.org/
+   - 前往 Account settings → API tokens
+   - 创建新的 API token
+   - 复制 token（格式：`pypi-xxx...`）
+
+2. **设置 GitHub Secrets**：
+   - 前往仓库 Settings → Secrets and variables → Actions
+   - 添加以下 secrets：
+     - `PYPI_API_TOKEN`：你的 PyPI API token
+     - `TEST_PYPI_API_TOKEN`：Test PyPI 的 API token（可选）
+
+3. **禁用默认工作流**：
+   - 重命名或删除 `.github/workflows/publish.yml`
+   - 启用 `.github/workflows/publish-with-token.yml`
+
+### GitHub 环境设置
+
+**仅适用于可信发布方式**，在 GitHub 仓库中配置环境：
 
 1. **前往仓库设置**：Settings → Environments
 2. **创建环境**：
@@ -91,6 +125,8 @@ uv run twine check dist/*
    - 需要审查者
    - 等待计时器
    - 部署分支限制
+
+**注意**：如果使用 API Token 方式，不需要创建环境，但仍需要设置 Secrets。
 
 ## 📝 版本管理
 

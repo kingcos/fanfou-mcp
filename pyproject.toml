@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fanfou-mcp"
-version = "0.1.0"
+version = "0.1.1"
 description = "饭否 MCP 服务器 - 基于 FastMCP 构建的饭否（Fanfou）MCP 服务器"
 readme = "README.md"
 requires-python = ">=3.11"
