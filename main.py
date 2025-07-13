@@ -7,65 +7,16 @@
 """
 
 import os
-import base64
-import requests
 from typing import Optional, List, Dict, Any
 from fastmcp import FastMCP
 from fanfou_client import FanFou
+from utils import image_url_to_base64
 
 # 创建 MCP 服务器实例
 mcp = FastMCP("饭否 MCP 服务器", instructions="饭否是一款基于 Web 的微博客服务，用户可以发布 140 字以内的消息，并可以关注其他用户。该 MCP 服务器提供了诸多饭否 API 的工具。")
 
 # 全局 FanFou 实例
 _fanfou_client: Optional[FanFou] = None
-
-def image_url_to_base64(large_url: str, normal_url: str = "") -> Optional[str]:
-    """
-    将图片URL转换为base64编码
-    
-    如果大图(largeurl)超过300KB，则使用普通图片(imageurl)进行转换
-    
-    Args:
-        large_url: 大图的URL地址
-        normal_url: 普通图片的URL地址，如果大图过大则使用此URL
-        
-    Returns:
-        base64编码的图片数据（data URL格式），如果失败则返回None
-    """
-    try:
-        # 首先尝试获取大图的大小
-        head_response = requests.head(large_url, timeout=10)
-        head_response.raise_for_status()
-        
-        # 获取内容长度
-        content_length = head_response.headers.get('content-length')
-        if content_length:
-            file_size = int(content_length)
-            # 如果大图超过300KB且有普通图片URL，则使用普通图片
-            if file_size > 300 * 1024 and normal_url:
-                print(f"大图尺寸 {file_size} 字节超过300KB，使用普通图片")
-                image_url = normal_url
-            else:
-                image_url = large_url
-        else:
-            # 如果无法获取大小信息，默认使用大图
-            image_url = large_url
-        
-        # 下载图片
-        response = requests.get(image_url, timeout=10)
-        response.raise_for_status()
-        
-        # 获取图片内容类型
-        content_type = response.headers.get('content-type', 'image/jpeg')
-        
-        # 转换为base64
-        image_base64 = base64.b64encode(response.content).decode('utf-8')
-        
-        # 返回data URL格式
-        return f"data:{content_type};base64,{image_base64}"
-    except Exception as e:
-        print(f"转换图片为base64失败: {e}")
-        return None
 
 def get_fanfou_client() -> FanFou:
     """
@@ -165,7 +116,7 @@ def generate_oauth_token() -> Dict[str, str]:
         temp_client = FanFou(api_key, api_secret, username=username, password=password)
         
         return {
-            "success": "OAuth Token 生成成功！请查看 MCP 输出并保存环境变量（以 JSON 格式输出给用户）。",
+            "success": "OAuth Token 生成成功！请查看 MCP 输出并保存至环境变量（以 JSON 格式输出给用户）。",
             "oauth_token": temp_client.token,
             "oauth_token_secret": temp_client.token_secret,
             "instructions": "请将生成的 OAuth Token 保存到 MCP env 中，然后移除用户名密码配置。"
