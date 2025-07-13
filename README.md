@@ -1,3 +1,14 @@
+---
+title: 饭否 MCP 服务器
+emoji: 🍚
+colorFrom: blue
+colorTo: purple
+sdk: gradio
+sdk_version: "5.36.2"
+app_file: app.py
+pinned: false
+---
+
 # 饭否 MCP 服务器
 
 基于 FastMCP 构建的饭否（Fanfou）MCP 服务器，提供饭否相关的工具和服务。
