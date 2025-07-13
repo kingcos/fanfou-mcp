@@ -15,6 +15,8 @@ pinned: false
 
 [![Publish to PyPI](https://github.com/kingcos/fanfou-mcp/actions/workflows/publish.yml/badge.svg)](https://github.com/kingcos/fanfou-mcp/actions/workflows/publish.yml)
 
+[![Deploy on Spaces](https://huggingface.co/datasets/huggingface/badges/resolve/main/deploy-on-spaces-sm.svg)](https://huggingface.co/spaces/kingcos/fanfou-mcp/tree/main)
+
 ## 功能特性
 
 - 🛠️ 基于 FastMCP 框架构建
