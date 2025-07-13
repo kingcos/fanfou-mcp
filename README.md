@@ -25,26 +25,15 @@ pinned: false
 - 🌐 支持 SSE (Server-Sent Events) 方式连接
 - 🐍 使用 Python 3.11+ 开发
 
-## 文件说明
+## 演示效果
 
-### PyPI 包必需文件
-- `main.py` - MCP 服务器主程序，PyPI 包入口点
-- `fanfou_client.py` - 饭否 API 客户端核心实现
-- `pyproject.toml` - PyPI 包配置文件，定义依赖和构建配置
-- `uv.lock` - 依赖锁定文件
+Claude 中使用效果：
 
-### Huggingface SSE 必需文件
-- `app.py` - Gradio Web 应用，提供 SSE MCP 服务和 Web UI
-- `requirements.txt` - Huggingface 部署依赖文件
-- `utils.py` - 工具函数模块（图片处理等）
+![Claude 中使用 fanfou-mcp 演示](docs/screenshot-1.png)
 
-### 文档和配置
-- `README.md` - 项目说明文档
-- `docs/` - 详细文档目录
-  - `API.md` - API 详细文档
-  - `PUBLISHING.md` - 发布指南
-- `LICENSE` - 许可证文件
-- `MANIFEST.in` - 包含文件清单
+Cursor 中使用效果：
+
+![Cursor 中使用 fanfou-mcp 演示](docs/screenshot-2.png)
 
 ## 快速开始
 
@@ -207,22 +196,6 @@ pinned: false
 - `delete_status` - 删除内容
 
 详细的 API 文档请参考：[API 文档](docs/API.md)
-
-## 部署方式
-
-### PyPI 包部署
-使用 `main.py` 作为入口点，依赖定义在 `pyproject.toml` 中：
-- `fastmcp>=2.10.5` - MCP 协议支持
-- `oauth2>=1.9.0.post1` - OAuth 认证
-- `requests>=2.32.4` - HTTP 请求
-- `twine>=5.0.0` - 包发布工具
-
-### Huggingface SSE 部署
-使用 `app.py` 作为 Gradio 应用，依赖定义在 `requirements.txt` 中：
-- `gradio[mcp]>=5.0.0` - Gradio Web 框架和 MCP 支持
-- `fastmcp>=2.10.5` - MCP 协议支持
-- `oauth2>=1.9.0.post1` - OAuth 认证
-- `requests>=2.32.4` - HTTP 请求
 
 ## 文档
 

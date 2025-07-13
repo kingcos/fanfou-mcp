@@ -2,6 +2,27 @@
 
 本文档详细描述了饭否 MCP 服务器提供的所有工具函数。
 
+## 文件说明
+
+### PyPI 包必需文件
+- `main.py` - MCP 服务器主程序，PyPI 包入口点
+- `fanfou_client.py` - 饭否 API 客户端核心实现
+- `pyproject.toml` - PyPI 包配置文件，定义依赖和构建配置
+- `uv.lock` - 依赖锁定文件
+
+### Huggingface SSE 必需文件
+- `app.py` - Gradio Web 应用，提供 SSE MCP 服务和 Web UI
+- `requirements.txt` - Huggingface 部署依赖文件
+- `utils.py` - 工具函数模块（图片处理等）
+
+### 文档和配置
+- `README.md` - 项目说明文档
+- `docs/` - 详细文档目录
+  - `API.md` - API 详细文档
+  - `PUBLISHING.md` - 发布指南
+- `LICENSE` - 许可证文件
+- `MANIFEST.in` - 包含文件清单
+
 ## 认证方式
 
 ### 环境变量方式（PyPI 包）

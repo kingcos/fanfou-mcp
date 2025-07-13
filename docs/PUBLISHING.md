@@ -2,6 +2,22 @@
 
 本文档详细说明如何将 `fanfou-mcp` 包发布到 PyPI。
 
+## 部署方式
+
+### PyPI 包部署
+使用 `main.py` 作为入口点，依赖定义在 `pyproject.toml` 中：
+- `fastmcp>=2.10.5` - MCP 协议支持
+- `oauth2>=1.9.0.post1` - OAuth 认证
+- `requests>=2.32.4` - HTTP 请求
+- `twine>=5.0.0` - 包发布工具
+
+### Huggingface SSE 部署
+使用 `app.py` 作为 Gradio 应用，依赖定义在 `requirements.txt` 中：
+- `gradio[mcp]>=5.0.0` - Gradio Web 框架和 MCP 支持
+- `fastmcp>=2.10.5` - MCP 协议支持
+- `oauth2>=1.9.0.post1` - OAuth 认证
+- `requests>=2.32.4` - HTTP 请求
+
 ## 🚀 自动发布（推荐）
 
 我们已经配置了 GitHub Actions 来自动发布到 PyPI。有两种方式触发发布：
