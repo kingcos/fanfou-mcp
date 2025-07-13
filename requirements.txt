@@ -1,0 +1,4 @@
+gradio[mcp]>=5.0.0
+fastmcp>=2.10.5
+oauth2>=1.9.0.post1
+requests>=2.32.4 
